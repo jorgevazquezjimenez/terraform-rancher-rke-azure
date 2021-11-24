@@ -100,10 +100,12 @@ resource "rancher2_cluster_sync" "rke_sync" {
 
 resource "rancher2_project" "app_project" {
   name       = "app_project"
-  cluster_id = rancher2_cluster.rke.id
+  cluster_id = rancher2_cluster_sync.rke_sync.id
+  description = "App project"
 }
 
 resource "rancher2_namespace" "app_namespace" {
   name       = "app"
   project_id = rancher2_project.app_project.id
+  description = "App namespace"
 }
