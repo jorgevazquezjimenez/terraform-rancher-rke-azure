@@ -59,7 +59,7 @@ resource "rancher2_cluster" "rke" {
 
 resource "rancher2_node_pool" "etcd_pool" {
   cluster_id = rancher2_cluster.rke.id
-  name = format("%s-%s",var.node_pool_name,"etcd")
+  name = "${var.node_pool_name}-etcd"
   hostname_prefix = var.hostname_prefix
   node_template_id = data.rancher2_node_template.controlplane_template.id
 
@@ -71,7 +71,7 @@ resource "rancher2_node_pool" "etcd_pool" {
 
 resource "rancher2_node_pool" "controlplane_pool" {
   cluster_id = rancher2_cluster.rke.id
-  name = format("%s-%s",var.node_pool_name,"controlplane")
+  name = "${var.node_pool_name}-control"
   hostname_prefix = var.hostname_prefix
   node_template_id = data.rancher2_node_template.controlplane_template.id
 
@@ -83,7 +83,7 @@ resource "rancher2_node_pool" "controlplane_pool" {
 
 resource "rancher2_node_pool" "workers_pool" {
   cluster_id = rancher2_cluster.rke.id
-  name = format("%s-%s",var.node_pool_name,"workers")
+  name = "${var.node_pool_name}-workers"
   hostname_prefix = var.hostname_prefix
   node_template_id = data.rancher2_node_template.workers_template.id
 
@@ -93,14 +93,17 @@ resource "rancher2_node_pool" "workers_pool" {
   worker = true
 }
 
-resource "rancher2_project" "app_project" {
+resource "rancher2_cluster_sync" "rke_sync" {
   cluster_id = rancher2_cluster.rke.id
+  node_pool_ids = [rancher2_node_pool.controlplane_pool.id,rancher2_node_pool.etcd_pool.id,rancher2_node_pool.workers_pool.id]
+}
+
+resource "rancher2_project" "app_project" {
   name       = "app_project"
-  wait_for_cluster = true
+  cluster_id = rancher2_cluster.rke.id
 }
 
 resource "rancher2_namespace" "app_namespace" {
   name       = "app"
   project_id = rancher2_project.app_project.id
-  wait_for_cluster = true
 }
